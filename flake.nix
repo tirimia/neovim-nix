@@ -62,6 +62,7 @@
             default = self.apps.${system}.latest;
           };
         checks.default = pkgs.runCommand "nightlyWorks" {} ''${pkgs.neovim-nightly}/bin/nvim -v > $out'';
+        formatter = pkgs.alejandra;
       }
     );
 }
