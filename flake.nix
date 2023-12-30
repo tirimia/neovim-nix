@@ -45,12 +45,10 @@
           };
         mkNeovim = version:
           neovimApp self.inputs.${version}.legacyPackages.${system}.neovim;
-        nightly =
-          (import nixpkgs {
-            inherit system;
-            overlays = [neovim-nightly.overlay];
-          })
-          .neovim-nightly;
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [neovim-nightly.overlay];
+        };
       in {
         apps =
           builtins.listToAttrs (map (version: {
@@ -59,10 +57,11 @@
             })
             versions)
           // {
-            nightly = neovimApp nightly;
+            nightly = neovimApp pkgs.neovim-nightly;
             latest = mkNeovim latest;
             default = self.apps.${system}.latest;
           };
+        checks.default = pkgs.runCommand "nightlyWorks" {} ''${pkgs.neovim-nightly}/bin/nvim -v > $out'';
       }
     );
 }
