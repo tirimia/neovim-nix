@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     neovim-nightly.url = "github:nix-community/neovim-nightly-overlay";
-    # No guarantee most of these versions will actually build - Should mark broken ones
+    # No guarantee most of these versions will actually build on all systems outside of x86 Linux
     # Hashes taken from nixhub.io
     # WARN: the inputs have to stay sorted
     "0_4_3".url = "github:NixOS/nixpkgs/e5b91d92a01178f9eecc0c7dd09a89e29fe9cc6f";
