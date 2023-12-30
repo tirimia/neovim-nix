@@ -2,9 +2,12 @@
   description = "Neovim version samples";
 
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    neovim-nightly.url = "github:nix-community/neovim-nightly-overlay";
     # No guarantee most of these versions will actually build - Should mark broken ones
     # Hashes taken from nixhub.io
+    # WARN: the inputs have to stay sorted
     "0_4_3".url = "github:NixOS/nixpkgs/e5b91d92a01178f9eecc0c7dd09a89e29fe9cc6f";
     "0_4_4".url = "github:NixOS/nixpkgs/db6e089456cdddcd7e2c1d8dac37a505c797e8fa";
     "0_5_0".url = "github:NixOS/nixpkgs/b5182c214fac1e6db9f28ed8a7cfc2d0c255c763";
@@ -25,19 +28,29 @@
 
   outputs = {
     self,
+    nixpkgs,
     flake-utils,
+    neovim-nightly,
     ...
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        # We take all inputs beginning with a digit so we can guarantee it's a neovim version
-        versions = with builtins; filter (input: (match "[[:digit:]].*" input) != null) (attrNames self.inputs);
-        latest = with builtins; elemAt (sort lessThan versions) (length versions - 1);
-        mkNeovim = version:
+        nonVersionImports = ["nixpkgs" "flake-utils" "neovim-nightly"];
+        versions = with builtins; filter (input: ! elem input nonVersionImports) (attrNames self.inputs);
+        latest = nixpkgs.lib.lists.last versions;
+        neovimApp = drv:
           flake-utils.lib.mkApp {
-            drv = self.inputs.${version}.legacyPackages.${system}.neovim;
+            inherit drv;
             name = "nvim";
           };
+        mkNeovim = version:
+          neovimApp self.inputs.${version}.legacyPackages.${system}.neovim;
+        nightly =
+          (import nixpkgs {
+            inherit system;
+            overlays = [neovim-nightly.overlay];
+          })
+          .neovim-nightly;
       in {
         apps =
           builtins.listToAttrs (map (version: {
@@ -46,6 +59,7 @@
             })
             versions)
           // {
+            nightly = neovimApp nightly;
             latest = mkNeovim latest;
             default = self.apps.${system}.latest;
           };
