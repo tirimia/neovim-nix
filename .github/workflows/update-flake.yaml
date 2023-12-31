@@ -16,7 +16,13 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@main
 
       - name: Update flake.lock
+        id: update
         uses: DeterminateSystems/update-flake-lock@main
         with:
           token: ${{ secrets.GH_TOKEN_FOR_UPDATES }}
           inputs: nixpkgs neovim-nightly
+
+      - name: Set auto-merge flag on the PR
+        run: gh pr merge ${{ steps.update.outputs.pull-request-number }} --auto --merge || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN_FOR_UPDATES }}
