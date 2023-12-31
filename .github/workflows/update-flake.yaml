@@ -23,6 +23,7 @@ jobs:
           inputs: nixpkgs neovim-nightly
 
       - name: Set auto-merge flag on the PR
-        run: gh pr merge ${{ steps.update.outputs.pull-request-number }} --auto --merge || true
+        if: steps.update.outputs.pull-request-number != ''
+        run: gh pr merge ${{ steps.update.outputs.pull-request-number }} --auto --merge
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN_FOR_UPDATES }}
