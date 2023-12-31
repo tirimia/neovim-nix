@@ -2,7 +2,8 @@
 name: Update flake
 on:
   schedule:
-    - cron: 0 2 * * *
+    # Leave enough margin for Neovim to tag nightly
+    - cron: 0 21 * * *
   workflow_dispatch:
 
 jobs:
