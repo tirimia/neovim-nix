@@ -20,7 +20,7 @@ jobs:
         uses: DeterminateSystems/update-flake-lock@main
         with:
           token: ${{ secrets.GH_TOKEN_FOR_UPDATES }}
-          inputs: nixpkgs neovim-nightly
+          inputs: nixpkgs neovim-flake
 
       - name: Set auto-merge flag on the PR
         if: steps.update.outputs.pull-request-number != ''

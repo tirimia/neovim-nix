@@ -4,7 +4,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    neovim-nightly.url = "github:nix-community/neovim-nightly-overlay";
+    neovim-flake = {
+      url = "github:neovim/neovim/nightly?dir=contrib";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # No guarantee most of these versions will actually build on all systems outside of x86 Linux
     # Hashes taken from nixhub.io
     # WARN: the inputs have to stay sorted
@@ -30,14 +33,15 @@
     self,
     nixpkgs,
     flake-utils,
-    neovim-nightly,
+    neovim-flake,
     ...
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        nonVersionImports = ["nixpkgs" "flake-utils" "neovim-nightly"];
+        nonVersionImports = ["nixpkgs" "flake-utils" "neovim-flake"];
         versions = with builtins; filter (input: ! elem input nonVersionImports) (attrNames self.inputs);
         latest = nixpkgs.lib.lists.last versions;
+
         neovimApp = drv:
           flake-utils.lib.mkApp {
             inherit drv;
@@ -45,10 +49,9 @@
           };
         mkNeovim = version:
           neovimApp self.inputs.${version}.legacyPackages.${system}.neovim;
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [neovim-nightly.overlay];
-        };
+        neovim-nightly = self.inputs.neovim-flake.packages.${system}.neovim;
+
+        pkgs = import nixpkgs {inherit system;};
       in {
         apps =
           builtins.listToAttrs (map (version: {
@@ -57,11 +60,11 @@
             })
             versions)
           // {
-            nightly = neovimApp pkgs.neovim-nightly;
+            nightly = neovimApp neovim-nightly;
             latest = mkNeovim latest;
             default = self.apps.${system}.latest;
           };
-        checks.default = pkgs.runCommand "nightlyWorks" {} ''${pkgs.neovim-nightly}/bin/nvim -v > $out'';
+        checks.default = pkgs.runCommand "nightlyWorks" {} ''${neovim-nightly}/bin/nvim -v > $out'';
         formatter = pkgs.alejandra;
       }
     );
