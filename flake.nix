@@ -53,6 +53,7 @@
 
         pkgs = import nixpkgs {inherit system;};
       in {
+        packages.bob = import ./bob.nix pkgs;
         apps =
           builtins.listToAttrs (map (version: {
               name = version;
