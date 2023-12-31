@@ -21,8 +21,15 @@ For a specific version (in this example `0_9_2`), check the inputs declared in t
 nix run github:tirimia/neovim-nix#0_9_2
 ```
 
+## Alternative
+For those that want to use [bob](https://github.com/MordechaiHadad/bob), that is packaged too, simply run:
+```shell
+nix run github:tirimia/neovim-nix#bob
+```
+
 ## TODO
 Add a check that would verify if we have all versions of nvim and use it in a cron based pipeline
+Add bob auto-updater or at least notifier
 
 ## Inspiration
 A [packaging request](https://github.com/NixOS/nixpkgs/issues/271480) for Nixpkgs lead me to find out that the nix flake in the neovim repo is not actively maintained.
