@@ -27,6 +27,7 @@
     "0_9_1".url = "github:NixOS/nixpkgs/efd23a1c9ae8c574e2ca923c2b2dc336797f4cc4";
     "0_9_2".url = "github:NixOS/nixpkgs/d1c9180c6d1f8fce9469436f48c1cb8180d7087d";
     "0_9_4".url = "github:NixOS/nixpkgs/fd04bea4cbf76f86f244b9e2549fca066db8ddff";
+    "0_9_5".url = "github:NixOS/nixpkgs/95f3e2ca333cb1317a968ab1d9d3f0b093d0cf43";
   };
 
   outputs = {

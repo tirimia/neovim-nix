@@ -256,6 +256,22 @@
         "type": "github"
       }
     },
+    "0_9_5": {
+      "locked": {
+        "lastModified": 1704054442,
+        "narHash": "sha256-t3vRtq77ZfJEBhOFDDIYiUwpde0oBvBLaHi9D9GQ2x8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "95f3e2ca333cb1317a968ab1d9d3f0b093d0cf43",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "95f3e2ca333cb1317a968ab1d9d3f0b093d0cf43",
+        "type": "github"
+      }
+    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -350,6 +366,7 @@
         "0_9_1": "0_9_1",
         "0_9_2": "0_9_2",
         "0_9_4": "0_9_4",
+        "0_9_5": "0_9_5",
         "flake-utils": "flake-utils",
         "neovim-flake": "neovim-flake",
         "nixpkgs": "nixpkgs"
