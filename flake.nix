@@ -54,7 +54,6 @@
 
         pkgs = import nixpkgs {inherit system;};
       in {
-        packages.bob = import ./bob.nix pkgs;
         apps =
           builtins.listToAttrs (map (version: {
               name = version;
@@ -66,8 +65,25 @@
             latest = mkNeovim latest;
             default = self.apps.${system}.latest;
           };
-        checks.default = pkgs.runCommand "nightlyWorks" {} ''${neovim-nightly}/bin/nvim -v > $out'';
+
+        packages.bob = import ./bob.nix pkgs;
+
+        checks = {
+          neovim-nightly = pkgs.runCommand "nightly" {} ''${neovim-nightly}/bin/nvim -v > $out'';
+          bob =
+            let package = self.packages.${system}.bob;
+            in pkgs.runCommand "bob" {} ''${package}/bin/bob --version > $out'';
+        };
+
         formatter = pkgs.alejandra;
+
+        devShells.package-updater = pkgs.mkShell {
+          buildInputs = [pkgs.nix-update];
+          GIT_AUTHOR_NAME = "github-actions[bot]";
+          GIT_AUTHOR_EMAIL = "github-actions[bot]@users.noreply.github.com";
+          GIT_COMMITTER_NAME = "github-actions[bot]";
+          GIT_COMMITTER_EMAIL = "github-actions[bot]@users.noreply.github.com";
+        };
       }
     );
 }

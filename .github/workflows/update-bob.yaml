@@ -1,0 +1,42 @@
+---
+name: Update bob
+on:
+  schedule:
+    - cron: 0 2 * * *
+  workflow_dispatch:
+
+jobs:
+  bob-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Update bob
+        # Why we are running it like this https://github.com/NixOS/nix/issues/8468
+        run: >
+          echo 'nix-update --flake packages.x86_64-linux.bob' |
+          nix develop .#package-updater -c bash
+
+      - name: Get commit message from nix-update
+        id: commit
+        run: echo "message=$(git show-branch --no-name HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@main
+        id: create-pr
+        with:
+          token: ${{ secrets.GH_TOKEN_FOR_UPDATES }}
+          title: ${{ steps.commit.outputs.message }}
+          branch: update_bob_action
+          delete-branch: true
+          body: Automatic update for the bob package
+
+      - name: Set auto-merge flag on the PR
+        if: steps.create-pr.outputs.pull-request-number != ''
+        run: gh pr merge ${{ steps.create-pr.outputs.pull-request-number }} --auto --merge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN_FOR_UPDATES }}
