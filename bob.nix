@@ -10,7 +10,7 @@ pkgs.rustPlatform.buildRustPackage rec {
     hash = "sha256-bLhFk6St2C1YeMN+ZlDXZ2ASrweHQaDfFZKWyzgS+JM=";
   };
 
-  cargoHash = "sha256-oLUgFv+nRhQOERD3S+GF3qdXHdpEVxynNLr6ff9EmVI=";
+  cargoLock.lockFile = "${src}/Cargo.lock";
 
   buildInputs =
     pkgs.lib.lists.optional pkgs.stdenv.isDarwin
