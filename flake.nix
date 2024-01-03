@@ -39,40 +39,57 @@
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
+        inherit (builtins) attrNames elem filter listToAttrs map;
         nonVersionImports = ["nixpkgs" "flake-utils" "neovim-flake"];
-        versions = with builtins; filter (input: ! elem input nonVersionImports) (attrNames self.inputs);
+        versions = filter (input: ! elem input nonVersionImports) (attrNames self.inputs);
         latest = nixpkgs.lib.lists.last versions;
 
         neovimApp = drv:
-          flake-utils.lib.mkApp {
-            inherit drv;
-            name = "nvim";
-          };
+          flake-utils.lib.mkApp { inherit drv; name = "nvim"; };
+        legacyPkgNeovim = input:
+          self.inputs.${input}.legacyPackages.${system}.neovim;
         mkNeovim = version:
-          neovimApp self.inputs.${version}.legacyPackages.${system}.neovim;
+          neovimApp (legacyPkgNeovim version);
         neovim-nightly = self.inputs.neovim-flake.packages.${system}.neovim;
 
         pkgs = import nixpkgs {inherit system;};
+
+        neovimPackageAttr = version:
+          { name = "neovim-${version}"; value = legacyPkgNeovim version; };
+
+        # TODO: add more filters and an elegant way to compose them
+        excludingVersion-0_4_3-aarch-darwin = version:
+          ! (version == "0_4_3" && system == "aarch64-darwin");
+
+        neovimAppDefinition = version:
+          { name = version; value = mkNeovim version; };
       in {
         apps =
-          builtins.listToAttrs (map (version: {
-              name = version;
-              value = mkNeovim version;
-            })
-            versions)
-          // {
+          {
             nightly = neovimApp neovim-nightly;
             latest = mkNeovim latest;
             default = self.apps.${system}.latest;
-          };
+          }
+          // listToAttrs (map neovimAppDefinition versions);
 
-        packages.bob = import ./bob.nix pkgs;
+        packages =
+          {
+            bob = import ./bob.nix pkgs;
+            neovim-nightly = neovim-nightly;
+            neovim-latest = legacyPkgNeovim latest;
+            default = self.packages.${system}.neovim-latest;
+          }
+          // listToAttrs (map (version: neovimPackageAttr version)
+            (filter excludingVersion-0_4_3-aarch-darwin versions));
 
-        checks = {
-          neovim-nightly = pkgs.runCommand "nightly" {} ''${neovim-nightly}/bin/nvim -v > $out'';
-          bob =
-            let package = self.packages.${system}.bob;
-            in pkgs.runCommand "bob" {} ''${package}/bin/bob --version > $out'';
+        checks = let
+          checkNeovim = name: package:
+            pkgs.runCommand name {} ''${package}/bin/nvim -v > $out'';
+        in {
+          neovim-nightly = checkNeovim "nightly" neovim-nightly;
+          neovim-latest = checkNeovim "latest" self.packages.${system}.neovim-latest;
+          bob = pkgs.runCommand "bob" {}
+            (self.packages.${system}.bob + ''/bin/bob --version > $out'');
         };
 
         formatter = pkgs.alejandra;
