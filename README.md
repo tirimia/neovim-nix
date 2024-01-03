@@ -29,12 +29,3 @@ nix run github:tirimia/neovim-nix#bob
 
 ## TODO
 Add a check that would verify if we have all versions of nvim and use it in a cron based pipeline
-Add bob auto-updater or at least notifier
-
-## Inspiration
-A [packaging request](https://github.com/NixOS/nixpkgs/issues/271480) for Nixpkgs lead me to find out that the nix flake in the neovim repo is not actively maintained.
-
-As I was considering whether to fulfill the packaging request I had this idea for just providing the flake myself using nixpkgs hashes taken from [Nixhub](https://www.nixhub.io/packages/neovim).
-
-## P.S.
-Should have called this flake Bobert in honor of the [project](https://github.com/MordechaiHadad/bob) that ultimately inspired this flake.
