@@ -50,37 +50,38 @@
           self.inputs.${input}.legacyPackages.${system}.neovim;
         mkNeovim = version:
           neovimApp (legacyPkgNeovim version);
-        neovim-nightly = self.inputs.neovim-flake.packages.${system}.neovim;
+        neovim-nightly = neovim-flake.packages.${system}.neovim;
 
         pkgs = import nixpkgs {inherit system;};
 
         neovimPackageAttr = version:
           { name = "neovim-${version}"; value = legacyPkgNeovim version; };
 
-        # TODO: add more filters and an elegant way to compose them
-        excludingVersion-0_4_3-aarch-darwin = version:
-          ! (version == "0_4_3" && system == "aarch64-darwin");
-
-        neovimAppDefinition = version:
-          { name = version; value = mkNeovim version; };
+        neovimAppDefinition = name:
+          { inherit name; value = mkNeovim name; };
+        brokenVersions = [
+          { version = "0_4_3"; system = "aarch64-darwin"; }
+          { version = "0_4_4"; system = "aarch64-darwin"; }
+        ];
+        workingVersions = filter
+          (version: ! elem { inherit version system; } brokenVersions) versions;
       in {
         apps =
           {
-            nightly = neovimApp neovim-nightly;
-            latest = mkNeovim latest;
+            nightly = neovimApp self.packages.${system}.neovim-nightly;
+            latest = neovimApp self.packages.${system}.neovim-latest;
             default = self.apps.${system}.latest;
           }
-          // listToAttrs (map neovimAppDefinition versions);
+          // listToAttrs (map neovimAppDefinition workingVersions);
 
         packages =
           {
             bob = import ./bob.nix pkgs;
-            neovim-nightly = neovim-nightly;
+            inherit neovim-nightly;
             neovim-latest = legacyPkgNeovim latest;
             default = self.packages.${system}.neovim-latest;
           }
-          // listToAttrs (map (version: neovimPackageAttr version)
-            (filter excludingVersion-0_4_3-aarch-darwin versions));
+          // listToAttrs (map neovimPackageAttr workingVersions);
 
         checks = let
           checkNeovim = name: package:
