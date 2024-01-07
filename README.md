@@ -18,7 +18,7 @@ nix run github:tirimia/neovim-nix#nightly
 ```
 For a specific version (in this example `0_9_2`), check the inputs declared in the [flake](./flake.nix) then run like:
 ```shell
-nix run github:tirimia/neovim-nix#0_9_2
+nix run github:tirimia/neovim-nix#neovim-0_9_2
 ```
 
 ## Alternative
