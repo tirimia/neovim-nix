@@ -40,18 +40,15 @@
     flake-utils.lib.eachDefaultSystem (
       system: let
         inherit (builtins) attrNames elem filter listToAttrs map;
+        pkgs = import nixpkgs {inherit system;};
+
         nonVersionImports = ["nixpkgs" "flake-utils" "neovim-flake"];
         versions = filter (input: ! elem input nonVersionImports) (attrNames self.inputs);
-        latest = nixpkgs.lib.lists.last versions;
+        latest = pkgs.lib.lists.last versions;
 
         neovimPackage = input:
           self.inputs.${input}.legacyPackages.${system}.neovim;
         neovim-nightly = neovim-flake.packages.${system}.neovim;
-
-        pkgs = import nixpkgs {inherit system;};
-
-        neovimPackageAttr = version:
-          { name = "neovim-${version}"; value = neovimPackage version; };
 
         brokenVersions = [
           { version = "0_4_3"; system = "aarch64-darwin"; }
@@ -60,6 +57,8 @@
         workingVersions = filter
           (version: ! elem { inherit version system; } brokenVersions) versions;
 
+        neovimPackageAttr = version:
+          { name = "neovim-${version}"; value = neovimPackage version; };
         versionedPackages = listToAttrs (map neovimPackageAttr workingVersions);
       in {
         packages =
@@ -71,11 +70,12 @@
           } // versionedPackages;
 
         checks = let
-          checkNeovim = name: package:
-            pkgs.runCommand name {} ''${package}/bin/nvim -v > $out'';
+          checkNeovim = version:
+            pkgs.runCommand version {}
+              (self.packages.${system}."neovim-${version}" + ''/bin/nvim -v > $out'');
         in {
-          neovim-nightly = checkNeovim "nightly" neovim-nightly;
-          neovim-latest = checkNeovim "latest" self.packages.${system}.neovim-latest;
+          neovim-nightly = checkNeovim "nightly";
+          neovim-latest = checkNeovim "latest";
           bob = pkgs.runCommand "bob" {}
             (self.packages.${system}.bob + ''/bin/bob --version > $out'');
         };
