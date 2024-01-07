@@ -4,11 +4,22 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    neovim-flake = {
+    nightly = {
       url = "github:neovim/neovim/nightly?dir=contrib";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "flake-utils";
+      };
+    };
+    stable = {
+      url = "github:neovim/neovim/stable?dir=contrib";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "flake-utils";
+      };
     };
     # No guarantee most of these versions will actually build on all systems outside of x86 Linux
+    # In case one of them is found to be broken, add it to brokenVersions
     # Hashes taken from nixhub.io
     # WARN: the inputs have to stay sorted
     "0_4_3".url = "github:NixOS/nixpkgs/e5b91d92a01178f9eecc0c7dd09a89e29fe9cc6f";
@@ -34,7 +45,6 @@
     self,
     nixpkgs,
     flake-utils,
-    neovim-flake,
     ...
   }:
     flake-utils.lib.eachDefaultSystem (
@@ -42,42 +52,61 @@
         inherit (builtins) attrNames elem filter listToAttrs map;
         pkgs = import nixpkgs {inherit system;};
 
-        nonVersionImports = ["nixpkgs" "flake-utils" "neovim-flake"];
+        nonVersionImports = ["nixpkgs" "flake-utils" "nightly" "stable"];
         versions = filter (input: ! elem input nonVersionImports) (attrNames self.inputs);
-        latest = pkgs.lib.lists.last versions;
+        stableVersion = pkgs.lib.lists.last versions;
+
+        neovimFlakePackage = input:
+          self.inputs.${input}.packages.${system}.neovim;
+        neovim-stable = neovimFlakePackage "stable";
+
+        brokenVersions = [
+          {
+            version = "0_4_3";
+            system = "aarch64-darwin";
+          }
+          {
+            version = "0_4_4";
+            system = "aarch64-darwin";
+          }
+        ];
+        workingVersions =
+          filter
+          (version: ! elem {inherit version system;} brokenVersions)
+          versions;
 
         neovimPackage = input:
           self.inputs.${input}.legacyPackages.${system}.neovim;
-        neovim-nightly = neovim-flake.packages.${system}.neovim;
-
-        brokenVersions = [
-          { version = "0_4_3"; system = "aarch64-darwin"; }
-          { version = "0_4_4"; system = "aarch64-darwin"; }
-        ];
-        workingVersions = filter
-          (version: ! elem { inherit version system; } brokenVersions) versions;
-
-        neovimPackageAttr = version:
-          { name = "neovim-${version}"; value = neovimPackage version; };
+        neovimPackageAttr = version: {
+          name = "neovim-${version}";
+          value = neovimPackage version;
+        };
         versionedPackages = listToAttrs (map neovimPackageAttr workingVersions);
+
+        checkNeovim = version:
+          pkgs.runCommand version {}
+          (self.packages.${system}."neovim-${version}" + ''/bin/nvim -v > $out'');
       in {
         packages =
           {
             bob = import ./bob.nix pkgs;
-            inherit neovim-nightly;
-            neovim-latest = neovimPackage latest;
-            default = self.packages.${system}.neovim-latest;
-          } // versionedPackages;
+            inherit neovim-stable;
+            neovim-nightly = neovimFlakePackage "nightly";
+            default = self.packages.${system}.neovim-stable;
+          }
+          // versionedPackages;
 
-        checks = let
-          checkNeovim = version:
-            pkgs.runCommand version {}
-              (self.packages.${system}."neovim-${version}" + ''/bin/nvim -v > $out'');
-        in {
+        checks = {
           neovim-nightly = checkNeovim "nightly";
-          neovim-latest = checkNeovim "latest";
-          bob = pkgs.runCommand "bob" {}
+          neovim-stable = checkNeovim "stable";
+          bob =
+            pkgs.runCommand "bob" {}
             (self.packages.${system}.bob + ''/bin/bob --version > $out'');
+          stablePresent =
+            pkgs.runCommand "stablePresent" {}
+            ''
+              OUR_STABLE=$(${neovim-stable}/bin/nvim --version | head -n1 | sed 's/NVIM v\(.*\)-d.*/\1/' | tr '.' '_')
+              [[ "$OUR_STABLE" == "${stableVersion}" ]] > $out'';
         };
 
         formatter = pkgs.alejandra;

@@ -8,7 +8,7 @@ First and foremost ensure you have nix installed and flakes enabled.
 The easiest way to achieve that is through the Determinate Systems [installer](https://github.com/DeterminateSystems/nix-installer).
 
 ### Versions
-Latest is the default
+Stable(latest) is the default
 ```shell
 nix run github:tirimia/neovim-nix
 ```
@@ -26,6 +26,3 @@ For those that want to use [bob](https://github.com/MordechaiHadad/bob), that is
 ```shell
 nix run github:tirimia/neovim-nix#bob
 ```
-
-## TODO
-Add a check that would verify if we have all versions of nvim and use it in a cron based pipeline
