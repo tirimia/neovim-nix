@@ -44,44 +44,31 @@
         versions = filter (input: ! elem input nonVersionImports) (attrNames self.inputs);
         latest = nixpkgs.lib.lists.last versions;
 
-        neovimApp = drv:
-          flake-utils.lib.mkApp { inherit drv; name = "nvim"; };
-        legacyPkgNeovim = input:
+        neovimPackage = input:
           self.inputs.${input}.legacyPackages.${system}.neovim;
-        mkNeovim = version:
-          neovimApp (legacyPkgNeovim version);
         neovim-nightly = neovim-flake.packages.${system}.neovim;
 
         pkgs = import nixpkgs {inherit system;};
 
         neovimPackageAttr = version:
-          { name = "neovim-${version}"; value = legacyPkgNeovim version; };
+          { name = "neovim-${version}"; value = neovimPackage version; };
 
-        neovimAppDefinition = name:
-          { inherit name; value = mkNeovim name; };
         brokenVersions = [
           { version = "0_4_3"; system = "aarch64-darwin"; }
           { version = "0_4_4"; system = "aarch64-darwin"; }
         ];
         workingVersions = filter
           (version: ! elem { inherit version system; } brokenVersions) versions;
-      in {
-        apps =
-          {
-            nightly = neovimApp self.packages.${system}.neovim-nightly;
-            latest = neovimApp self.packages.${system}.neovim-latest;
-            default = self.apps.${system}.latest;
-          }
-          // listToAttrs (map neovimAppDefinition workingVersions);
 
+        versionedPackages = listToAttrs (map neovimPackageAttr workingVersions);
+      in {
         packages =
           {
             bob = import ./bob.nix pkgs;
             inherit neovim-nightly;
-            neovim-latest = legacyPkgNeovim latest;
+            neovim-latest = neovimPackage latest;
             default = self.packages.${system}.neovim-latest;
-          }
-          // listToAttrs (map neovimPackageAttr workingVersions);
+          } // versionedPackages;
 
         checks = let
           checkNeovim = name: package:
