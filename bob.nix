@@ -1,13 +1,13 @@
 {pkgs, ...}:
 pkgs.rustPlatform.buildRustPackage rec {
   pname = "bob";
-  version = "2.8.0";
+  version = "2.8.1";
 
   src = pkgs.fetchFromGitHub {
     owner = "MordechaiHadad";
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-LQEoiXsrDTXOPRX8Tcqg0p58mgxJfKcjs1XFD1vNtOs=";
+    hash = "sha256-yk/kW3uqycaie2lOQTyrPdmoCrUZPcj7UasrvmAJGmM=";
   };
 
   cargoLock = {
