@@ -301,11 +301,11 @@
       },
       "locked": {
         "dir": "contrib",
-        "lastModified": 1712799283,
-        "narHash": "sha256-dqkHNmyiYkZ3NmXlRqr5/0BCgN0jM12JcCX6bC73QLM=",
+        "lastModified": 1712884573,
+        "narHash": "sha256-rPDHOcV9+HMAxObtQZFu/4X1uTy0SLuFXpXXl+0MU3Y=",
         "owner": "neovim",
         "repo": "neovim",
-        "rev": "7aa56370f326f5f1b3fdfa1c79bbffc7cc6ae267",
+        "rev": "8cca7871555e15f53de3dc4325c8d0203a78622a",
         "type": "github"
       },
       "original": {
