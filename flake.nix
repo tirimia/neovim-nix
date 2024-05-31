@@ -4,20 +4,18 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    nightly = {
-      url = "github:neovim/neovim/nightly?dir=contrib";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-        flake-utils.follows = "flake-utils";
-      };
+    nightly-overlay = {
+      url = "github:nix-community/neovim-nightly-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
-    stable = {
-      url = "github:neovim/neovim/stable?dir=contrib";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-        flake-utils.follows = "flake-utils";
-      };
-    };
+    # TODO: re-enable stable in the next version of nvim
+    # stable = {
+    #   url = "github:neovim/neovim/stable?dir=contrib";
+    #   inputs = {
+    #     nixpkgs.follows = "nixpkgs";
+    #     flake-utils.follows = "flake-utils";
+    #   };
+    # };
     # No guarantee most of these versions will actually build on all systems outside of x86 Linux
     # In case one of them is found to be broken, add it to brokenVersions
     # Hashes taken from nixhub.io
@@ -53,13 +51,13 @@
         inherit (builtins) attrNames elem filter listToAttrs map;
         pkgs = import nixpkgs {inherit system;};
 
-        nonVersionImports = ["nixpkgs" "flake-utils" "nightly" "stable"];
+        nonVersionImports = ["nixpkgs" "flake-utils" "nightly-overlay" "stable"];
         versions = filter (input: ! elem input nonVersionImports) (attrNames self.inputs);
-        stableVersion = pkgs.lib.lists.last versions;
 
-        neovimFlakePackage = input:
-          self.inputs.${input}.packages.${system}.neovim;
-        neovim-stable = neovimFlakePackage "stable";
+        # stableVersion = pkgs.lib.lists.last versions;
+        # neovimFlakePackage = input:
+        #   self.inputs.${input}.packages.${system}.neovim;
+        # neovim-stable = neovimFlakePackage "stable";
 
         brokenVersions = [
           {
@@ -91,23 +89,23 @@
         packages =
           {
             bob = import ./bob.nix pkgs;
-            inherit neovim-stable;
-            neovim-nightly = neovimFlakePackage "nightly";
-            default = self.packages.${system}.neovim-stable;
+            #inherit neovim-stable;
+            neovim-nightly = self.inputs.nightly-overlay.packages.${pkgs.system}.default;
+            default = self.packages.${system}.neovim-nightly;
           }
           // versionedPackages;
 
         checks = {
           neovim-nightly = checkNeovim "nightly";
-          neovim-stable = checkNeovim "stable";
+          #neovim-stable = checkNeovim "stable";
           bob =
             pkgs.runCommand "bob" {}
             (self.packages.${system}.bob + ''/bin/bob --version > $out'');
-          stablePresent =
-            pkgs.runCommand "stablePresent" {}
-            ''
-              OUR_STABLE=$(${neovim-stable}/bin/nvim --version | head -n1 | sed 's/NVIM v\(.*\)-d.*/\1/' | tr '.' '_')
-              [[ "$OUR_STABLE" == "${stableVersion}" ]] > $out'';
+          # stablePresent =
+          #   pkgs.runCommand "stablePresent" {}
+          #   ''
+          #     OUR_STABLE=$(${neovim-stable}/bin/nvim --version | head -n1 | sed 's/NVIM v\(.*\)-d.*/\1/' | tr '.' '_')
+          #     [[ "$OUR_STABLE" == "${stableVersion}" ]] > $out'';
         };
 
         formatter = pkgs.alejandra;
