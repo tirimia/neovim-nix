@@ -98,9 +98,6 @@
         checks = {
           neovim-nightly = checkNeovim "nightly";
           #neovim-stable = checkNeovim "stable";
-          bob =
-            pkgs.runCommand "bob" {}
-            (self.packages.${system}.bob + ''/bin/bob --version > $out'');
           # stablePresent =
           #   pkgs.runCommand "stablePresent" {}
           #   ''
