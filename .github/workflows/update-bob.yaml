@@ -16,7 +16,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@main
 
       - name: Use magic cache
-        uses: DeterminateSystems/magic-nix-cache-action@main
+        uses: DeterminateSystems/flakehub-cache-action@main
 
       - name: Update bob
         # Why we are running it like this https://github.com/NixOS/nix/issues/8468
