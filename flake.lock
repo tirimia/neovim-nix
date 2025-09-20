@@ -450,11 +450,11 @@
     "neovim-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1758238812,
-        "narHash": "sha256-7LJ8a/wyN8Rb0dD8d9x33GLP2CfNmAKB+DwjDO2bbk4=",
+        "lastModified": 1758319198,
+        "narHash": "sha256-vbtHQm0FRX1Qa7uSguBiW7zmzSVpTXUEU96kRwapI1M=",
         "owner": "neovim",
         "repo": "neovim",
-        "rev": "c9f62674028d764f8a6faa433baa7ab209956fc8",
+        "rev": "19ba5899460ffdbf159ad4323ae5f3af6ce2eb53",
         "type": "github"
       },
       "original": {
@@ -476,11 +476,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1758240313,
-        "narHash": "sha256-4RBUV0gc2kii4MTsECxSMTf+UGt6JR229JQcbL4L3zs=",
+        "lastModified": 1758326788,
+        "narHash": "sha256-jTy1mZXyUQEsnyyye8y+jM49FkSIwT3wUviNRocS4oE=",
         "owner": "nix-community",
         "repo": "neovim-nightly-overlay",
-        "rev": "928308a20559523bb3898861a6f28e9589ab3a0e",
+        "rev": "7660a81d4710ef71df2ab352220d11c0873ab494",
         "type": "github"
       },
       "original": {
